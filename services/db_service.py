@@ -6,8 +6,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def get_connection():
-    conn_string = "host=localhost port=5432 dbname=teckia_db user=teckia_user password=teckia2024"
-    return psycopg2.connect(conn_string)
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        return psycopg2.connect(database_url)
+    # Fallback local
+    return psycopg2.connect(
+        host='localhost',
+        port=5432,
+        dbname='teckia_db',
+        user='teckia_user',
+        password='teckia2024'
+    )
 
 def init_db():
     conn = get_connection()
