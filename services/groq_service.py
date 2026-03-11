@@ -65,3 +65,14 @@ Rules:
         temperature=0.3
     )
     return response.choices[0].message.content.strip()
+
+def transcribe_audio(audio_file_path: str, language: str = None) -> str:
+    """Transcrit un fichier audio en texte avec Groq Whisper"""
+    with open(audio_file_path, 'rb') as audio_file:
+        transcription = client.audio.transcriptions.create(
+            file=audio_file,
+            model="whisper-large-v3-turbo",
+            language=language,
+            response_format="text"
+        )
+    return transcription

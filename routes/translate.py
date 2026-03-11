@@ -1,3 +1,8 @@
+import os
+import tempfile
+from flask import Blueprint, request, jsonify
+from services.groq_service import translate_text, detect_language, transcribe_audio
+from services.db_service import save_translation
 from flask import Blueprint, request, jsonify
 from services.groq_service import translate_text, detect_language
 from services.db_service import save_translation
@@ -65,6 +70,29 @@ def detect():
 
         detected = detect_language(text)
         return jsonify({'success': True, 'language': detected})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+@translate_bp.route('/transcribe', methods=['POST'])
+def transcribe():
+    try:
+        if 'audio' not in request.files:
+            return jsonify({'success': False, 'error': 'Aucun fichier audio'}), 400
+
+        audio_file = request.files['audio']
+        language = request.form.get('language', None)
+
+        # Sauvegarder temporairement le fichier audio
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.m4a') as tmp:
+            audio_file.save(tmp.name)
+            tmp_path = tmp.name
+
+        try:
+            transcription = transcribe_audio(tmp_path, language)
+            return jsonify({'success': True, 'text': transcription})
+        finally:
+            os.unlink(tmp_path)
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
